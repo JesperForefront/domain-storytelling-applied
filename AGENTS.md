@@ -26,3 +26,6 @@
 8. Do not infer rules that the specification does not state. Record unresolved
    decisions in `DESIGN.md` as open questions before implementing policy-dependent
    behaviour.
+9. Use `Result` or `Result<T>` return types for expected outcomes in public
+   application or service workflows. Do not use exceptions for ordinary control
+   flow.

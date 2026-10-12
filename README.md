@@ -25,6 +25,9 @@ dotnet test
 Domain objects goes in `TE.DomainStorytellingApplied.Domain` \
 Test cases goes in `TE.DomainStorytellingApplied.Domain.Tests`
 
+The suggested implementation sequence is in
+[`IMPLEMENTATION.md`](IMPLEMENTATION.md).
+
 ## Feedback requested
 
 I am still learning C# inheritance and composition. Feedback on modelling
