@@ -24,3 +24,9 @@ dotnet test
 # Structure
 Domain objects goes in `TE.DomainStorytellingApplied.Domain` \
 Test cases goes in `TE.DomainStorytellingApplied.Domain.Tests`
+
+## Feedback requested
+
+I am still learning C# inheritance and composition. Feedback on modelling
+approval as composition through `Approver` and `IReservationApprover` would be
+appreciated.

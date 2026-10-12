@@ -23,18 +23,73 @@ and presentation concerns are outside this POC.
 
 | Term | Meaning |
 |---|---|
-| **Booker** | A municipality employee, association representative, or private individual who requests a reservation. |
+| **Booker** | The abstract base type for someone who can request a reservation. It provides first name, last name, and email address. |
+| **Municipality employee (ME)** | A booker employed by the municipality. A municipality employee may be assigned an approver role. |
+| **Association representative (AR)** | A booker who represents an association. |
+| **Private individual (PI)** | A booker acting in a private capacity and identified by a social security number. |
 | **Premises** | A bookable physical location. A premise has a name and address. |
 | **Timeslot** | A specific available period at one premise that may be reserved. |
 | **Reservation** | The record and lifecycle of one request by a booker to reserve one timeslot. |
 | **Booking policy** | The rules that determine whether a booking may proceed automatically or requires review. |
-| **Approver** | A person authorised to approve or reject a reservation that requires review. |
+| **Approver** | A separate approval role that represents a municipality employee authorised to approve or reject a reservation. It is not a person or a booker. |
 | **Confirmation or rejection** | The outcome communicated to the booker after a reservation is decided. |
 
 Use **premises** for the concept and `Premise` for a singular domain type if the
 code uses singular class names.
 
 ## Domain model
+
+### Booker inheritance
+
+The people model uses class inheritance, not interfaces. The intended C#
+hierarchy is:
+
+```text
+Booker (abstract)
+├── MunicipalityEmployee
+├── AssociationRepresentative
+└── PrivateIndividual
+```
+
+`Booker` has the following required fields:
+
+| Field | Type | Meaning |
+|---|---|---|
+| `fname` | `NonBlankString` | First name |
+| `lname` | `NonBlankString` | Last name |
+| `mail` | `EmailAddress` | Email address |
+
+`Booker` is an abstract superclass: every municipality employee, association
+representative, and private individual is a booker. This inheritance hierarchy
+describes who can make reservations; it does not describe approval authority.
+
+| Concrete subclass | Additional required field | Type | Meaning |
+|---|---|---|---|
+| `AssociationRepresentative` | `association` | `NonBlankString` | The association represented by the booker. |
+| `PrivateIndividual` | `ssn` | `SocialSecurityNumber` | The private individual's social security number. |
+| `MunicipalityEmployee` | None | N/A | A municipality-employed booker. |
+
+### Approval role and capability
+
+`Approver` is a composed role, not a subclass of `Booker` or
+`MunicipalityEmployee`. It holds exactly one `MunicipalityEmployee`. This
+makes the rule explicit: an approver must be a municipality employee, while a
+municipality employee does not automatically have approval authority.
+
+`Approver` implements a small `IReservationApprover` interface. The interface
+expresses the single capability needed by a reservation: its holder may decide
+a pending reservation. `Reservation.Approve` and `Reservation.Reject` accept
+an `IReservationApprover`, not a `MunicipalityEmployee`.
+
+```text
+Approver ──has a──> MunicipalityEmployee
+Approver ──implements──> IReservationApprover
+Reservation ──accepts──> IReservationApprover
+```
+
+This is composition plus an interface: the employee remains a `Booker`, but
+the `Approver` role is not one. It also permits a future, different kind of
+authorised approver without changing the `Reservation` API.
 
 ### Aggregate root: Reservation
 
@@ -71,28 +126,41 @@ It has a stable identity.
 
 | Entity | Identity | Responsibilities |
 |---|---|---|
-| **Booker** | `BookerId` | Represents the person making a booking request. Stores name, email address, and phone number. |
+| **Booker** | `BookerId` | Abstract entity that stores `fname`, `lname`, and `mail`. |
+| **MunicipalityEmployee** | `BookerId` | Concrete booker employed by the municipality. |
+| **AssociationRepresentative** | `BookerId` | Concrete booker that also stores the association represented. |
+| **PrivateIndividual** | `BookerId` | Concrete booker that also stores a social security number. |
 | **Premise** | `PremiseId` | Represents a bookable location and stores its name and address. |
 | **Timeslot** | `TimeslotId` | Represents an available period for one premise. Stores its start time, duration, premise identity, and availability. |
-| **Approver** | `ApproverId` | Represents a person authorised to decide reservations that require review. |
 
 `Reservation` is also an entity, but is listed separately because it is the
 aggregate root.
+
+### Roles and interfaces
+
+| Type | Responsibility |
+|---|---|
+| **Approver** | Role object that wraps a `MunicipalityEmployee` and grants it approval authority. |
+| **IReservationApprover** | Capability interface accepted by reservation approval and rejection operations. |
 
 ### Value objects
 
 | Value object | Rule |
 |---|---|
+| **NonBlankString** | Wraps a required string and rejects `null`, an empty string, and a whitespace-only string. It is used for every required textual value. |
 | **Duration** | A positive whole number of seconds. |
-| **EmailAddress** | A booker's email address; its exact validation policy is not yet specified. |
-| **PhoneNumber** | A booker's telephone number; its exact validation policy is not yet specified. |
-| **Address** | A premise address. Its structure is not yet specified. |
+| **EmailAddress** | A required, non-blank email address. Its email-format validation policy is not yet specified. |
+| **SocialSecurityNumber** | A required, non-blank social security number. Its format and normalisation rules are not yet specified. |
+| **Address** | A required, non-blank premise address. Its structure is not yet specified. |
 | **BookingPolicyDecision** | The result of applying booking policy: automatic approval or review required. |
 | **ReservationOutcome** | An immutable confirmation or rejection communicated to the booker. |
 
-Identifiers such as `BookerId`, `PremiseId`, `TimeslotId`, `ReservationId`, and
-`ApproverId` should be strongly typed value objects when introduced. Their
+Identifiers such as `BookerId`, `PremiseId`, `TimeslotId`, and `ReservationId`
+should be strongly typed value objects when introduced. Their
 underlying value is a GUID.
+
+No domain type may expose a required value as a raw `string`. It must use a
+value object that rejects `null`, empty, and whitespace-only input.
 
 ### Domain service: BookingPolicy
 
@@ -123,7 +191,8 @@ behaviour is implemented.
 
 ### Creating reservations
 
-1. **Given** an available timeslot belonging to a premise and a valid booker,
+1. **Given** an available timeslot belonging to a premise and a valid concrete
+   booker,
    **when** the policy says automatic approval, **then** creating the reservation
    results in an approved reservation.
 2. **Given** an available timeslot belonging to a premise and a valid booker,
@@ -152,6 +221,23 @@ behaviour is implemented.
    **when** a timeslot is created, **then** it is available unless explicitly
    marked otherwise.
 
+### People and required text
+
+1. **Given** a `null`, empty, or whitespace-only string, **when** a
+   `NonBlankString` is created, **then** creation fails explicitly.
+2. **Given** non-blank first name, last name, and email address, **when** a
+   concrete booker is created, **then** it exposes those values through
+   `Booker`.
+3. **Given** an association representative, **when** it is created, **then**
+   it must have a non-blank association.
+4. **Given** a private individual, **when** it is created, **then** it must
+   have a non-blank social security number.
+5. **Given** an approver, **when** it is created, **then** it is also a
+   role for exactly one municipality employee, but is not itself a booker.
+6. **Given** a municipality employee without an approver role, **when** a
+   pending reservation needs a decision, **then** that employee cannot be
+   supplied to the reservation as an `IReservationApprover`.
+
 ## Open decisions
 
 The following are intentionally unresolved and must be specified before their
@@ -162,7 +248,7 @@ behaviour is implemented:
   and how concurrent requests are resolved.
 - Whether a rejected or cancelled reservation makes a timeslot available again.
 - Whether reservations can be cancelled, rescheduled, or expire.
-- The validation and normalisation rules for names, email addresses, phone
-  numbers, and addresses.
-- How approver authorisation is established; authorisation infrastructure is
+- The format and normalisation rules for email addresses, social security
+  numbers, and addresses beyond the required non-blank rule.
+- Who assigns or revokes the `Approver` role. Authorisation infrastructure is
   outside the domain POC.
