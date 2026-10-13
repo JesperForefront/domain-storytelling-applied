@@ -1,6 +1,6 @@
 namespace TE.DomainStorytellingApplied.Domain;
 
-public sealed class AssociationRepresentative : Booker
+public class AssociationRepresentative : Booker
 {
     public AssociationRepresentative(
         BookerId id,

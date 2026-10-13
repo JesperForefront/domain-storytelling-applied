@@ -1,6 +1,6 @@
 namespace TE.DomainStorytellingApplied.Domain;
 
-public sealed record EmailAddress
+public record EmailAddress
 {
     public EmailAddress(string value)
     {

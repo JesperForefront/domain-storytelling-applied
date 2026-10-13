@@ -1,6 +1,6 @@
 namespace TE.DomainStorytellingApplied.Domain;
 
-public sealed class Timeslot
+public class Timeslot
 {
     public Timeslot(
         TimeslotId id,

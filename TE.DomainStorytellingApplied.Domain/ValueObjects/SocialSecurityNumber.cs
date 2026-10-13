@@ -1,6 +1,6 @@
 namespace TE.DomainStorytellingApplied.Domain;
 
-public sealed record SocialSecurityNumber
+public record SocialSecurityNumber
 {
     public SocialSecurityNumber(string value)
     {

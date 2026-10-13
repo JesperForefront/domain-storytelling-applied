@@ -1,6 +1,6 @@
 namespace TE.DomainStorytellingApplied.Domain;
 
-public sealed class Premise
+public class Premise
 {
     public Premise(PremiseId id, NonBlankString name, Address address)
     {

@@ -1,6 +1,6 @@
 namespace TE.DomainStorytellingApplied.Domain;
 
-public sealed class PrivateIndividual : Booker
+public class PrivateIndividual : Booker
 {
     public PrivateIndividual(
         BookerId id,

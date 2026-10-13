@@ -1,6 +1,6 @@
 namespace TE.DomainStorytellingApplied.Domain;
 
-public sealed record NonBlankString
+public record NonBlankString
 {
     public NonBlankString(string value)
     {

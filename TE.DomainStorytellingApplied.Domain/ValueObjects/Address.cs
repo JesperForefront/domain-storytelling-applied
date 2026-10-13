@@ -1,6 +1,6 @@
 namespace TE.DomainStorytellingApplied.Domain;
 
-public sealed record Address
+public record Address
 {
     public Address(string value)
     {
