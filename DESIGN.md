@@ -153,7 +153,7 @@ aggregate root.
 | **SocialSecurityNumber** | A required, non-blank social security number. Its format and normalisation rules are not yet specified. |
 | **Address** | A required, non-blank premise address. Its structure is not yet specified. |
 | **BookingPolicyDecision** | The result of applying booking policy: automatic approval or review required. |
-| **ReservationOutcome** | An immutable confirmation or rejection communicated to the booker. |
+| **ReservationOutcome** | An immutable confirmation or rejection communicated to the booker. It contains the reservation identity, booker identity, and final reservation status. |
 
 Identifiers such as `BookerId`, `PremiseId`, `TimeslotId`, and `ReservationId`
 should be strongly typed value objects when introduced. Their
@@ -184,6 +184,17 @@ The system/application layer coordinates the flow:
 
 The system is not an entity, value object, or aggregate in this model.
 
+`ReservationOutcome` can only be created from an approved or rejected
+reservation. Pending reservations do not have an outcome and must not be
+communicated as if they had been decided.
+
+The application layer communicates an outcome through
+`IReservationOutcomeSender`. This is an application boundary with one
+operation that accepts a `ReservationOutcome`; delivery mechanisms such as
+email or SMS are infrastructure concerns and are outside this POC. Until a
+booking-policy rule is specified, application coordination accepts the
+applicable `BookingPolicyDecision` rather than implementing a policy.
+
 ## Acceptance scenarios
 
 Each numbered scenario should have a corresponding focused domain test once its
@@ -212,6 +223,23 @@ behaviour is implemented.
 3. **Given** an approved or rejected reservation, **when** a decision is
    attempted, **then** the operation fails explicitly and the original outcome
    remains unchanged.
+
+### Communicating reservation outcomes
+
+1. **Given** an approved reservation, **when** an outcome is created, **then**
+   it contains the reservation identity, booker identity, and approved status.
+2. **Given** a rejected reservation, **when** an outcome is created, **then**
+   it contains the rejected status.
+3. **Given** a pending reservation, **when** an outcome is created, **then**
+   creation fails explicitly.
+4. **Given** an automatically approved reservation, **when** application
+   coordination creates it, **then** it sends its outcome through
+   `IReservationOutcomeSender`.
+5. **Given** a reservation requiring review, **when** application coordination
+   creates it, **then** it does not send an outcome until an approver decides it.
+6. **Given** a pending reservation, **when** application coordination approves
+   or rejects it, **then** it sends the corresponding outcome through
+   `IReservationOutcomeSender`.
 
 ### Timeslots
 

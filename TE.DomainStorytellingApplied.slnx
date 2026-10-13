@@ -1,4 +1,6 @@
 <Solution>
+  <Project Path="TE.DomainStorytellingApplied.Application.Tests/TE.DomainStorytellingApplied.Application.Tests.csproj" />
+  <Project Path="TE.DomainStorytellingApplied.Application/TE.DomainStorytellingApplied.Application.csproj" />
   <Project Path="TE.DomainStorytellingApplied.Domain.Tests/TE.DomainStorytellingApplied.Domain.Tests.csproj" />
   <Project Path="TE.DomainStorytellingApplied.Domain/TE.DomainStorytellingApplied.Domain.csproj" />
 </Solution>
