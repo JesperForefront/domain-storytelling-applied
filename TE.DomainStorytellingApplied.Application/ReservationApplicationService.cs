@@ -22,7 +22,7 @@ public class ReservationApplicationService
 
         if (reservation.Status == ReservationStatus.Approved)
         {
-            SendOutcome(reservation);
+            SendOutcome(reservation); // Helt rätt ställa att lägga sådana saker som detta här! Skicka saker och liknande är inte domänens ansvar utan det hanterar Applikations lagret
         }
 
         return reservation;

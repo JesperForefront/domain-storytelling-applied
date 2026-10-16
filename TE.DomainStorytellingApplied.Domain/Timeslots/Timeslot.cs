@@ -9,6 +9,7 @@ public class Timeslot
         PremiseId premiseId,
         bool isAvailable = true)
     {
+        // Nu när du har Duration som Value Object så kan vi skippa denna check :)
         if (duration.Seconds <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(duration), "Duration must be positive.");

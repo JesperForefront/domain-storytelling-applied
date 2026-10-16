@@ -4,9 +4,9 @@ public class Reservation
 {
     public Reservation(
         ReservationId id,
-        Booker booker,
-        Timeslot timeslot,
-        Premise premise,
+        Booker booker, // Booker borde nog vara ett ID här också då den ligger i ett eget aggregat
+        Timeslot timeslot, // Samma sak här skulle jag tro då Timeslots antingen är ett eget aggregat eller bor under Premises
+        Premise premise, // Premises är ett eget aggregat skulle jag säga då den lever sitt eget liv och inte styrs direkt av Reservation. Men Reservation beror på det!
         BookingPolicyDecision policyDecision)
     {
         ArgumentNullException.ThrowIfNull(booker);
@@ -18,6 +18,15 @@ public class Reservation
             throw new ArgumentException("Timeslot must belong to the requested premise.", nameof(premise));
         }
 
+        // Om vi skulle referera Timeslot bara via ID så skulle vi inte kunna göra denna checken här.
+        // Då är det aktuellt med en Domain Service som skulle sköta orkestereringen av denna invariant!
+        // Anledningen till att man vill använda ID istället för en referens är på grund av något som kallas Consistency Boundary.
+        // Du kan läsa mer om det här:
+        // https://www.arhohuttunen.com/domain-driven-design-repositories-application-services/
+        // https://milanjovanovic.tech/blog/application-services-vs-domain-services-ddd
+        //
+        // Det var något vi inte hann dyka in i så djupt under passet tyvärr.
+        // Mycket handlar om hur man designar så man kan läsa och skriva saker utan att behöva spara hela sin domän model varje gång. Utan kunna jobba med ett Aggregat åt gången.
         if (!timeslot.IsAvailable)
         {
             throw new InvalidOperationException("An unavailable timeslot cannot be reserved.");
@@ -51,6 +60,7 @@ public class Reservation
 
     public ReservationStatus Status { get; private set; }
 
+    // Snyggt!
     public void Approve(IReservationApprover approver)
     {
         ArgumentNullException.ThrowIfNull(approver);
