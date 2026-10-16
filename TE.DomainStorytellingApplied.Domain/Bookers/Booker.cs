@@ -1,5 +1,6 @@
 namespace TE.DomainStorytellingApplied.Domain;
 
+// Bra tänkt här med en basklass för alla som är Bookers, och sedan lägga dom specifika fälten i sina respektive klasser!
 public abstract class Booker
 {
     protected Booker(BookerId id, NonBlankString fname, NonBlankString lname, EmailAddress mail)

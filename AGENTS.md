@@ -1,3 +1,5 @@
+[BRA!]: #
+
 # Rules for agents
 
 1. No (or minimal) comments. A comment may only be added if absolutely neccessary
